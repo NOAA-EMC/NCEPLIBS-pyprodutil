@@ -176,7 +176,7 @@ class Datastore(object):
         if logger is not None:
             logger.debug('Lockfile is %s for database %s'%(lockfile,filename))
         self._file_lock=produtil.locking.LockFile(
-            lockfile,logger=logger,max_tries=900,sleep_time=0.2,first_warn=50)
+            lockfile,logger=logger,max_tries=300,sleep_time=0.1,first_warn=50)
         self._transtack=collections.defaultdict(list)
         with self.transaction() as tx:
             self._createdb(self._connection())

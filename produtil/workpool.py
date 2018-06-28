@@ -148,7 +148,7 @@ class WorkPool(object):
 
     def exceptions(self):
         """!Iterates over all exceptions from worker threads."""
-        for thread in set(self._threads):
+        for thread in self._threads:
             ex=thread.exception
             if ex is not None: yield ex
             
@@ -232,7 +232,7 @@ class WorkPool(object):
         constructor or any worker thread.  Returns False otherwise."""
         me=threading.current_thread()
         if me==self._master: return True
-        for t in set(self._threads):
+        for t in self._threads:
             if t==me: return True
         return False
 
@@ -368,7 +368,7 @@ class WorkPool(object):
                     self._barrier_set.clear()
         else:
             self._debug('BARRIER (worker)')
-            for thread in set(self._threads):
+            for thread in self._threads:
                 if me==thread:
                     with self._barrier_condition:
                         self._barrier_set.add(me)
