@@ -241,16 +241,16 @@ def register_implementations(logger=None):
         logger.info('lsf_cray_intel: cannot import: %s'%(str(e),))
 
     try:
-        import produtil.mpi_impl.mpirun_lsf
-        add_implementation(produtil.mpi_impl.mpirun_lsf.Implementation)
-    except ImportError as e: 
-        logger.info('mpirun_lsf: cannot import: %s'%(str(e),))
-
-    try:
         import produtil.mpi_impl.impi
         add_implementation(produtil.mpi_impl.impi.Implementation)
     except ImportError as e: 
         logger.info('impi: cannot import: %s'%(str(e),))
+
+    try:
+        import produtil.mpi_impl.mpirun_lsf
+        add_implementation(produtil.mpi_impl.mpirun_lsf.Implementation)
+    except ImportError as e: 
+        logger.info('mpirun_lsf: cannot import: %s'%(str(e),))
 
     try:
         import produtil.mpi_impl.mpiexec_mpt

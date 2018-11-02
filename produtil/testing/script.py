@@ -195,6 +195,7 @@ class ProdutilRunner(produtil.testing.parsetree.Context):
         if MPI=='lsf':      MPI='mpirun_lsf'
         if MPI=='lsfcray':  MPI='lsf_cray_intel'   # alias for Rocoto lsfcray
         if MPI=='mpich':    MPI='impi'
+        if MPI=='lsf_impi': MPI='impi'
         if MPI=='mvapich2': MPI='mpiexec'
         if MPI=='moab':     MPI='moab_cray'        # alias for Rocoto moab
 
