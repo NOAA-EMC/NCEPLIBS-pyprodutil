@@ -25,28 +25,25 @@ class Implementation(ImplementationBase):
     # Path to the srun program
 
     @staticmethod
-    def get_pack_group_sizes():
-        if 'SLURM_PACK_SIZE' not in os.environ:
+    def get_int_env(varname):
+        if varname not in os.environ:
             raise MPIMissingEnvironment(
-                "Could not find SLURM_PACK_SIZE in the environment")
+                'Could not find %s in the environment'%(varname,))
         try:
-            pack_size=int(os.environ['SLURM_PACK_SIZE'],10)
+            return int(os.environ[varname],10)
         except ValueError as ve:
             raise MPIEnvironmentInvalid(
-                "SLURM_PACK_SIZE is not an integer (is \"%s\" instead)"%(
-                    os.environ['SLURM_PACK_SIZE'],))
+                '%s is not an integer (is \"%s\" instead)'%(
+                    varname,os.environ[varname]))
+    
+    @staticmethod
+    def get_pack_group_sizes():
+        if 'SLURM_PACK_SIZE' not in os.environ:
+            return [Implementation.get_int_env('SLURM_NPROCS')]
+        pack_size=Implementation.get_int_env('SLURM_PACK_SIZE')
         pack_group_sizes=[0] * pack_size
         for ipack in range(pack_size):
-            varname='SLURM_NPROCS_PACK_GROUP_%d'%ipack
-            if varname not in os.environ:
-                raise MPIMissingEnvironment(
-                    'Could not find %s in the environment'%(varname,))
-            try:
-                group_size=int(os.environ[varname],10)
-            except ValueError as ve:
-                raise MPIEnvironmentInvalid(
-                    '%s is not an integer (is \"%s\" instead)'%(
-                        varname,os.environ[varname]))
+            group_size=Implementation.get_int_env('SLURM_NPROCS_PACK_GROUP_%d'%ipack)
             pack_group_sizes[ipack]=group_size
         return pack_group_sizes
                 
