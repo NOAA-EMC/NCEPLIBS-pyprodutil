@@ -54,8 +54,16 @@ def guess_total_tasks_impl(logger,silent):
                     len(cpus),cpu_cores,ppn))
     return np*ppn
 
-class MPIConfigError(Exception): 
+class MPIError(Exception):
+    """!Base class of all exceptions related to launching MPI programs."""
+class MPIMissingEnvironment(MPIError):
+    """!Raised when the environment variables related to the MPI implementation are missing."""
+class MPIEnvironmentInvalid(MPIError):
+    """!Raised when the environment variables related to the MPI implementation are contain invalid data."""
+class MPIConfigError(MPIError): 
     """!Base class of MPI configuration exceptions."""
+class MPITooManyRanks(MPIError):
+    """!Raised when the program requests more ranks than are available."""
 class WrongMPI(MPIConfigError): 
     """!Unused: raised when the wrong MPI implementation is accessed.  """
 class MPISerialMissing(MPIConfigError):
@@ -73,7 +81,7 @@ class MPIDisabled(MPIConfigError):
     """!Thrown to MPI is not supported."""
 class OpenMPDisabled(MPIConfigError):
     """!Raised when OpenMP is not supported by the present implementation."""
-
+    
 class ImplementationBase(object):
     """!Abstract base class for all MPI implementations.  Default
     implementations for all functions represent a situation where no
