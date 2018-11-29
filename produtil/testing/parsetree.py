@@ -2135,7 +2135,7 @@ class EmbedBash(Scope):
 
         script=self.bash_context(con)
         # yell('%-7s %-7s %s\n'%("RUN","BASH",script))
-        cmd=produtil.run.exe("bash")
+        cmd=produtil.run.batchexe("bash")
         if con.verbose:
             cmd=cmd<<'set -xue\n'+script
         else:
