@@ -5,10 +5,10 @@
 # for details.  This translates produtil.run directives to SLURM srun
 # commands.
 
-import os, logging
+import os, logging, sys
 import produtil.fileop,produtil.prog,produtil.mpiprog,produtil.pipeline
 
-from .mpi_impl_base import MPIMixed,CMDFGen,ImplementationBase, \
+from .mpi_impl_base import MPIMixed,CMDFGen,ImplementationBase,MPIError, \
                            MPIThreadsMixed,MPILocalOptsMixed,MPITooManyRanks, \
                            MPIMissingEnvironment,MPIEnvironmentInvalid
 from produtil.pipeline import NoMoreProcesses
@@ -24,8 +24,7 @@ class Implementation(ImplementationBase):
     ##@var srun_path
     # Path to the srun program
 
-    @staticmethod
-    def get_int_env(varname):
+    def get_int_env(self,varname):
         if varname not in os.environ:
             raise MPIMissingEnvironment(
                 'Could not find %s in the environment'%(varname,))
@@ -36,30 +35,48 @@ class Implementation(ImplementationBase):
                 '%s is not an integer (is \"%s\" instead)'%(
                     varname,os.environ[varname]))
     
-    @staticmethod
-    def get_pack_group_sizes():
+    def get_pack_group_sizes_from_environment(self):
         if 'SLURM_PACK_SIZE' not in os.environ:
-            return [Implementation.get_int_env('SLURM_NPROCS')]
-        pack_size=Implementation.get_int_env('SLURM_PACK_SIZE')
+            return [self.get_int_env('SLURM_NPROCS')]
+        pack_size=self.get_int_env('SLURM_PACK_SIZE')
         pack_group_sizes=[0] * pack_size
         for ipack in range(pack_size):
-            group_size=Implementation.get_int_env('SLURM_NPROCS_PACK_GROUP_%d'%ipack)
+            group_size=self.get_int_env('SLURM_NPROCS_PACK_GROUP_%d'%ipack)
             pack_group_sizes[ipack]=group_size
         return pack_group_sizes
-                
+    
+    def fake_pack_group_sizes(self, mpiprog):
+        return [ count for rank,count in mpiprog.expand_iter(False) ]
+
+    def get_pack_group_sizes(self,mpiprog=None,scheduler_distribution=None):
+        if mpiprog is not None and self.force:
+            if scheduler_distribution is not None:
+                # Nproc is nodes*ppn for each group in the
+                # distribution specified to the scheduler:
+                return [n[0]*n[1] for n in scheduler_distribution ]
+            try:
+                return self.get_pack_group_sizes_from_environment()
+            except (KeyError,ValueError,MPIError) as e:
+                return self.fake_pack_group_sizes(mpiprog)
+        return self.get_pack_group_sizes_from_environment()
+
     @staticmethod
     def name():
         return 'srun'
 
     @staticmethod
     def detect(srun_path=None,mpiserial_path=None,logger=None,force=False,silent=False,**kwargs):
-        """!Detects whether the SLURM srun command is available by looking
-        for it in the $PATH."""
+        """!Detects whether the SLURM srun command is available by
+        looking for it in the $PATH.  Also requires the SLURM_NODELIST
+        variable.  This is to detect the case where srun is available,
+        but no slurm resources are available."""
         if srun_path is None:
             if force:
                 srun_path='srun'
             else:
                 srun_path=produtil.fileop.find_exe('srun',raise_missing=True)
+        if 'SLURM_NODELIST' not in os.environ and not force:
+            return None
         return Implementation(srun_path,mpiserial_path,logger,silent,force)
 
     def __init__(self,srun_path,mpiserial_path,logger,silent,force):
@@ -68,6 +85,7 @@ class Implementation(ImplementationBase):
             self.mpiserial_path=mpiserial_path
         self.srun_path=srun_path
         self.silent=silent
+        self.force=force
 
     def runsync(self,logger=None):
         """!Runs the "sync" command as an exe()."""
@@ -99,7 +117,6 @@ class Implementation(ImplementationBase):
             nodesize=self.nodesize
             threads=max(1,nodesize-1)
             
-        assert(threads>0)
         threads=int(threads)
         if hasattr(arg,'argins'):
             if not self.silent:
@@ -125,7 +142,7 @@ class Implementation(ImplementationBase):
         return produtil.prog.ImmutableRunner([
             self.srun_path,'--ntasks','1',str(exe)],**kwargs)
     
-    def mpirunner(self,arg,allranks=False,**kwargs):
+    def mpirunner(self,arg,allranks=False,scheduler_distribution=None,**kwargs):
         """!Turns a produtil.mpiprog.MPIRanksBase tree into a produtil.prog.Runner
         @param arg a tree of produtil.mpiprog.MPIRanksBase objects
         @param allranks if True, and only one rank is requested by arg, then
@@ -133,12 +150,12 @@ class Implementation(ImplementationBase):
         @param kwargs passed to produtil.mpi_impl.mpi_impl_base.CMDFGen
           when mpiserial is in use.
         @returns a produtil.prog.Runner that will run the selected MPI program"""
-        f=self.mpirunner_impl(arg,allranks=allranks,**kwargs)
+        f=self.mpirunner_impl(arg,allranks,scheduler_distribution,**kwargs)
         if not self.silent:
             logging.getLogger('srun').info("%s => %s"%(repr(arg),repr(f)))
         return f
     
-    def mpirunner_impl(self,arg,allranks=False,**kwargs):
+    def mpirunner_impl(self,arg,allranks,scheduler_distribution,**kwargs):
         """!This is the underlying implementation of mpirunner and should
         not be called directly."""
         assert(isinstance(arg,produtil.mpiprog.MPIRanksBase))
@@ -160,7 +177,7 @@ class Implementation(ImplementationBase):
         srun_args=[self.srun_path,'--export=ALL']
     
         if arg.nranks()==1 and allranks:
-            pack_group_sizes=self.get_pack_group_sizes()
+            pack_group_sizes=self.get_pack_group_sizes(arg,scheduler_distribution)
             pack_size=len(pack_group_sizes)
             srun_args=[self.srun_path]
             for i in xrange(pack_size):
@@ -177,7 +194,7 @@ class Implementation(ImplementationBase):
             lines=[str(a) for a in arg.to_arglist(to_shell=True,expand=True)]
             included_ranks=0
             desired_ranks=arg.nranks()
-            pack_group_sizes=self.get_pack_group_sizes()
+            pack_group_sizes=self.get_pack_group_sizes(arg,scheduler_distribution)
             srun_args=[self.srun_path]
             for igroup in xrange(len(pack_group_sizes)):
                 group_size=pack_group_sizes[igroup]
@@ -194,7 +211,7 @@ class Implementation(ImplementationBase):
         else:
             included_ranks=0
             desired_ranks=arg.nranks()
-            pack_group_sizes=self.get_pack_group_sizes()
+            pack_group_sizes=self.get_pack_group_sizes(arg,scheduler_distribution)
             next_unused_group=0
             first=True
             

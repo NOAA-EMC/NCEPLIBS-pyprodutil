@@ -1812,7 +1812,7 @@ class SpawnProcess(TypelessObject):
             size+=rank.ranks(con)
         return size
 
-    def rocoto_resources(self,con):
+    def _make_nodes_ppn(self,con):
         rank_info=list()
         for rank in self.__ranks:
             rank_info=rank.merge_into(con,rank_info)
@@ -1829,6 +1829,7 @@ class SpawnProcess(TypelessObject):
 
         # (nodes, ppn) pairs for blocks of similar nodes:
         packed=[ pack_ranks(r['ppn'],r['ranks']) for r in rank_info ]
+        sys.stderr.write(repr(packed)+'\n')
         nodes=sum([ pr[0] for pr in expand_lists(packed,0) ])
 
         # Determine the acting node size:
@@ -1843,6 +1844,11 @@ class SpawnProcess(TypelessObject):
             # but we'll try to request it anyway.  
             nodesize=max(nodesize,max_ppn_tpn)
 
+        return MPI,nodesize,affinity,max_threads,nodes,max_ppn_tpn,max_ppn,packed
+
+    def rocoto_resources(self,con):
+        MPI,nodesize,affinity,max_threads,nodes,max_ppn_tpn,max_ppn,packed=\
+            self._make_nodes_ppn(con)
         request=''
 
         if MPI.upper().find('LSF')>=0:
@@ -1872,6 +1878,9 @@ class SpawnProcess(TypelessObject):
 
         @param con the Context in which this object is being evaluated
         @returns a bash code block to run the program."""
+        MPI,nodesize,affinity,max_threads,nodes,max_ppn_tpn,max_ppn,packed=\
+            self._make_nodes_ppn(con)
+
         out=StringIO.StringIO()
         out.write('# Embedded process execution:\n')
         need_ranks=len(self.__ranks)>1
@@ -1896,7 +1905,7 @@ class SpawnProcess(TypelessObject):
                                 for r in self.__ranks[0].args]))
             out.write('\n')
         else:
-            out.write('%s\n'%(con.mpirunner(self),))
+            out.write('%s\n'%(con.mpirunner(self,distribution=packed[0]),))
         out.write('# End of embedded process execution.\n')
         ret=out.getvalue()
         out.close()
