@@ -1829,7 +1829,6 @@ class SpawnProcess(TypelessObject):
 
         # (nodes, ppn) pairs for blocks of similar nodes:
         packed=[ pack_ranks(r['ppn'],r['ranks']) for r in rank_info ]
-        sys.stderr.write(repr(packed)+'\n')
         nodes=sum([ pr[0] for pr in expand_lists(packed,0) ])
 
         # Determine the acting node size:
