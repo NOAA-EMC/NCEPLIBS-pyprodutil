@@ -201,7 +201,7 @@ class ProdutilRunner(produtil.testing.parsetree.Context):
 
         self.mpiimpl=produtil.run.make_mpi(
             MPI,total_tasks=nodesize,nodesize=nodesize,force=True,silent=True)
-    def mpirunner(self,spawnProcess):
+    def mpirunner(self,spawnProcess,distribution):
         """!Generates the mpi launching command for the given
         produtil.testing.parsetree.SpawnProcess object
 
@@ -244,7 +244,7 @@ class ProdutilRunner(produtil.testing.parsetree.Context):
                 cmd=cmd+cmdpart
 
         if is_mpi:
-            cmd=produtil.run.mpirun(cmd,mpiimpl=mpiimpl,label_io=True)
+            cmd=produtil.run.mpirun(cmd,mpiimpl=mpiimpl,label_io=True,scheduler_distribution=distribution)
         return cmd.to_shell()
 
 class MPICHRunner(produtil.testing.parsetree.Context):
@@ -263,7 +263,7 @@ class MPICHRunner(produtil.testing.parsetree.Context):
         @param logger a logging.Logger for logging messages"""
         super(MPICHRunner,self).__init__(
             scopes,token,run_mode,logger)
-    def mpirunner(self,spawnProcess):
+    def mpirunner(self,spawnProcess,distribution):
         """!Generates the mpirun command for the given
         produtil.testing.parsetree.SpawnProcess object
 
@@ -296,7 +296,7 @@ class LSFRunner(produtil.testing.parsetree.Context):
         @param logger a logging.Logger for logging messages"""
         super(LSFRunner,self).__init__(
             scopes,token,run_mode,logger)
-    def mpirunner(self,spawnProcess):
+    def mpirunner(self,spawnProcess,distribution):
         """!Generates the mpirun.lsf command for the given
         produtil.testing.parsetree.SpawnProcess object
 
@@ -312,7 +312,7 @@ class LSFRunner(produtil.testing.parsetree.Context):
         return 'mpirun.lsf '+prog
 
 def runner_context_for(con):
-    """!Returns a context with an mpirunner(spawnProcess) function,
+    """!Returns a context with an mpirunner(spawnProcess,distribution) function,
     such as the LSFRunner or MPICHRunner classes.
 
     @param con the context to use when resolving "plat%MPI" to get the
