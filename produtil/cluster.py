@@ -107,7 +107,7 @@ def where():
             here=NOAAWCOSS(phase=3)
         elif os.path.exists('/gpfs/hps/nco'):
             here=WCOSSCray()
-        elif os.path.exists('/lustre/f1'):
+        elif os.path.exists('/lustre/f2'):
             here=NOAAGAEA()
         else:
             here=Cluster(False,False,False,'noname','noname')
