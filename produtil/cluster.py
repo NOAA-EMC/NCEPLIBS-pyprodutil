@@ -83,7 +83,7 @@ def where():
     The result is stored in the module scope "here" variable."""
     global here
     if here is None:
-        if os.path.exists('/pan2'):
+        if os.path.exists('/lfs3'):
             here=NOAAJet()
         elif os.path.exists('/glade'):
             here=UCARYellowstone()
