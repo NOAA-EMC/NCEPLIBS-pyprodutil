@@ -113,15 +113,12 @@ class Implementation(ImplementationBase):
             scontrol,capture=True,logger=self.logger)
         nodelist=p.to_string()
         status=p.poll()
-        self.logger.warning('nodelist: '+repr(nodelist))
         for line in nodelist.splitlines():
             node=line.strip()
-            self.logger.info(repr(line)+' stripped is '+repr(node))
             if not node: next
             if node in nodeset: next
             nodeset.add(node)
             available_nodes.append(node)
-        self.logger.info('available_nodes: '+repr(available_nodes))
         return available_nodes
     
     def mpirunner_impl(self,arg,allranks=False,rewrite_nodefile=True,**kwargs):
@@ -166,7 +163,6 @@ class Implementation(ImplementationBase):
             if rewrite_nodefile:
                 nodefile=list()
                 available_nodes=self._get_available_nodes()
-                self.logger.info('got available_nodes = '+repr(available_nodes))
                 slurm_ppn_string=os.environ['SLURM_JOB_CPUS_PER_NODE'].strip()
                 trim_extra=re.sub(r'^(\d+)(?:\(.*\))?',r'\1',slurm_ppn_string)
                 node_size=int(trim_extra,10)
@@ -179,7 +175,6 @@ class Implementation(ImplementationBase):
                 if rewrite_nodefile:
                     rpn=max(min(node_size,rank.rpn()),1)
                     need_nodes=max(1,(count+rpn-1)//rpn)
-                    self.logger.info('For '+repr(rank)+'*'+repr(count)+', need '+repr(need_nodes)+' nodes of '+repr(len(remaining_nodes))+' remaining')
                     if need_nodes>len(remaining_nodes):
                         raise MPITooManyRanks('Request is too large for %d nodes of size %d: %s'%(
                             len(available_nodes),node_size,repr(arg)))
@@ -191,8 +186,6 @@ class Implementation(ImplementationBase):
                         this_node_rpn=min_rpn
                         if n<nodes_with_extra_rank:
                             this_node_rpn+=1
-                        self.logger.info('Use %d ranks on %s for %s'%(
-                            this_node_rpn,remaining_nodes[n],repr(rank)))
                         nodefile.extend([remaining_nodes[n]] * this_node_rpn)
 
                     # Remove the nodes we used:
