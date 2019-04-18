@@ -259,6 +259,15 @@ def register_implementations(logger=None):
         logger.info('mpiexec_mpt: cannot import: %s'%(str(e),))
 
     try:
+        # If we have srun, and we're using a pack group...
+        import produtil.mpi_impl.srun_pack_groups
+        add_implementation(produtil.mpi_impl.srun_pack_groups.Implementation)
+    except ImportError as e: 
+        logger.info('srun: cannot import: %s'%(str(e),))
+
+    try:
+        # This must be after the pack group case.
+        # If we have srun at all...
         import produtil.mpi_impl.srun
         add_implementation(produtil.mpi_impl.srun.Implementation)
     except ImportError as e: 
