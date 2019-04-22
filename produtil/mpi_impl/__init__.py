@@ -229,6 +229,21 @@ def register_implementations(logger=None):
     # functionality.
 
     try:
+        # If we have srun, and we're in a pack group...
+        import produtil.mpi_impl.srun_pack_groups
+        add_implementation(produtil.mpi_impl.srun_pack_groups.Implementation)
+    except ImportError as e: 
+        logger.info('srun: cannot import: %s'%(str(e),))
+
+    try:
+        # This must be after the pack group case.
+        # If we have srun and SLURM resources...
+        import produtil.mpi_impl.srun
+        add_implementation(produtil.mpi_impl.srun.Implementation)
+    except ImportError as e: 
+        logger.info('srun: cannot import: %s'%(str(e),))
+
+    try:
         import produtil.mpi_impl.inside_aprun
         add_implementation(produtil.mpi_impl.inside_aprun.Implementation)
     except ImportError as e: 
@@ -257,12 +272,6 @@ def register_implementations(logger=None):
         add_implementation(produtil.mpi_impl.mpiexec_mpt.Implementation)
     except ImportError as e: 
         logger.info('mpiexec_mpt: cannot import: %s'%(str(e),))
-
-    try:
-        import produtil.mpi_impl.srun
-        add_implementation(produtil.mpi_impl.srun.Implementation)
-    except ImportError as e: 
-        logger.info('srun: cannot import: %s'%(str(e),))
 
     try:
         import produtil.mpi_impl.mpiexec
