@@ -137,7 +137,10 @@ class Implementation(ImplementationBase):
             raise MPIThreadsMixed('Cannot mix different thread counts for different executables or blocks of MPI ranks in impi')
 
 
-        srun_args=[self.srun_path,'--export=ALL','--cpu_bind=core']
+        if arg.nranks()==1 and allranks and os.getenv('TOTAL_TASKS'):
+            srun_args=[self.srun_path,'-n',os.getenv('TOTAL_TASKS'),'--export=ALL','--cpu-bind=cores']
+        else:
+            srun_args=[self.srun_path,'--export=ALL','--cpu-bind=cores']
     
         if arg.nranks()==1 and allranks:
             srun_args.append('--distribution=block:block')
