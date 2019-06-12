@@ -9,9 +9,9 @@ ways of automatically accessing configuration options."""
 
 ##@var __all__
 # decides what symbols are imported by "from produtil.config import *"
-__all__=['from_file','from-string','confwalker','ProdConfig','fordriver','ENVIRONMENT','ProdTask']
+__all__=['from_file','from-string','confwalker','ProdConfig','fordriver','ENVIRONMENT','ProdTask','Conf2JSON']
 
-import ConfigParser,collections,re,string,os,logging,threading
+import ConfigParser,collections,re,string,os,logging,threading,json
 import os.path,sys,StringIO
 import datetime
 import produtil.fileop, produtil.datastore
@@ -22,7 +22,7 @@ from produtil.fileop import *
 
 from produtil.numerics import to_datetime
 from string import Formatter
-from ConfigParser import SafeConfigParser,NoOptionError,NoSectionError
+from ConfigParser import SafeConfigParser,NoOptionError,NoSectionError,ConfigParser
 
 UNSPECIFIED=object()
 
@@ -1659,3 +1659,93 @@ class ProdTask(produtil.datastore.Task):
         if subdom is None:
             return self._logger
         return self._conf.log(self.taskname+'.'+str(subdom))
+
+class Conf2JSON(object):
+    """!This class is used to convert UNIX .conf formatted files to a
+    JavaScript Object Notation (JSON) such that various workflow
+    utilities can parse the respective files for their necessary
+    levels of execution.
+
+    """
+    def __init__(self):
+        """!Creates a new Conf2JSON object."""
+    def dict_formatter(self,in_dict):
+        """!This method formats a Python dictionary and returns it as
+        'out_dict'; all UNICODE and data-type conversions are
+        performed within this method.  
+
+        @param in_dict: a standalone Python dictionary to be
+        formatted.
+
+        """
+        def sorted_by_keys(dct,):
+            new_dct=dict()
+            for key,value in sorted(dct.items(),key=lambda key: key):
+                if sys.version_info<(3,0,0):
+                    if isinstance(value,unicode):
+                        value=value.encode('ascii','ignore')
+                    if isinstance(key,unicode):
+                        key=key.encode('ascii','ignore')
+                if isinstance(value,dict):
+                    new_dct[key]=sorted_by_keys(value)
+                else:
+                    if sys.version_info<(3,0,0):
+                        if isinstance(key,unicode):
+                            key=key.encode('ascii','ignore')
+                        if isinstance(value,unicode):
+                            value=value.encode('ascii','ignore')
+                    test_value=value
+                    try:
+                        if 'env' in test_value.lower():
+                            k=test_value
+                            test_value=get_envvar(key=k)
+                    except AttributeError:
+                        pass
+                    if isinstance(test_value,bool):
+                        if test_value:
+                            value=True
+                        if not test_value:
+                            value=False
+                    if isinstance(test_value,str):
+                        try:
+                            dummy=float(test_value)
+                            if '.' in test_value:
+                                value=float(test_value)
+                            else:
+                                value=int(test_value)
+                        except ValueError:
+                            if test_value.lower()=='none':
+                                value=None
+                            elif test_value.lower()=='true':
+                                value=True
+                            elif test_value.lower()=='false':
+                                value=False
+                            else:
+                                value=str(test_value)
+                    new_dct[key]=value
+            return new_dct
+        out_dict=sorted_by_keys(dct=in_dict)
+        return out_dict
+    def run(self,conf_file,json_file):
+        """!This method ingests a INI-formatted (e.g., UNIX .conf) file and
+        writes the records within to a JSON-formatted file.
+        
+        @param conf_file: the path to the INI-formatted (e.g., UNIX
+        .conf) file to be converted to a JSON formatted file.
+
+        @param json_file: the path to the output JSON formatted file
+        constructed from the input INI-formatted file.
+
+        """
+        config=ConfigParser()
+        config.readfp(open(conf_file))
+        config_list=list()
+        config_dict=collections.defaultdict(dict)
+        for section in config.sections():
+            for (key,value) in config.items(section):
+                config_dict[section][key]=value
+            config_dict[section]=self.dict_formatter(in_dict=\
+                config_dict[section])
+            config_list.append(config_dict[section])
+        with open(json_file,'w') as jf:
+            json.dump(config_list,jf,indent=4)
