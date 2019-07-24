@@ -22,7 +22,7 @@ from produtil.fileop import *
 
 from produtil.numerics import to_datetime
 from string import Formatter
-from ConfigParser import SafeConfigParser,NoOptionError,NoSectionError,ConfigParser
+from ConfigParser import SafeConfigParser,NoOptionError,NoSectionError,MAX_INTERPOLATION_DEPTH
 
 UNSPECIFIED=object()
 
@@ -123,7 +123,7 @@ class ConfFormatter(Formatter):
         @param args the indexed arguments to str.format()
         @param kwargs the keyword arguments to str.format()"""
         kwargs['__depth']+=1
-        if kwargs['__depth']>=ConfigParser.MAX_INTERPOLATION_DEPTH:
+        if kwargs['__depth']>=MAX_INTERPOLATION_DEPTH:
             raise ConfigParser.InterpolationDepthError(kwargs['__key'],
                 kwargs['__section'],key)
         try:
@@ -350,7 +350,7 @@ class ConfTimeFormatter(ConfFormatter):
         @param kwargs the keyword arguments to str.format()"""
         v=NOTFOUND
         kwargs['__depth']+=1
-        if kwargs['__depth']>=ConfigParser.MAX_INTERPOLATION_DEPTH:
+        if kwargs['__depth']>=MAX_INTERPOLATION_DEPTH:
             raise ConfigParser.InterpolationDepthError(
                 kwargs['__key'],kwargs['__section'],v)
         try:
@@ -1737,7 +1737,7 @@ class Conf2JSON(object):
         constructed from the input INI-formatted file.
 
         """
-        config=ConfigParser()
+        config=ConfigParser.ConfigParser()
         config.readfp(open(conf_file))
         config_list=list()
         config_dict=collections.defaultdict(dict)
