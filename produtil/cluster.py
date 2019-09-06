@@ -4,7 +4,7 @@
 #List of symbols exported by "from produtil.cluster import *"
 __all__=['Cluster','where','longname','name','group_quotas','acl_support',
          'no_access_control','use_acl_for_rstdata','ncepprod',
-         'NOAAJet','NOAAGAEA','NOAAZeus','NOAAWCOSS']
+         'NOAAJet','NOAAGAEA','NOAAHera','NOAAWCOSS']
 
 import time, socket, os, re
 
@@ -100,7 +100,7 @@ def where():
             if theia:
                 here=NOAATheia()
             else:
-                here=NOAAZeus()
+                here=NOAAHera()
         elif os.path.exists('/ptmpd2'):
             here=NOAAWCOSS()
         elif os.path.exists('/usrx') and 'dell' in os.readlink('/usrx'):
@@ -187,13 +187,12 @@ class NOAAGAEA(Cluster):
         super(NOAAGAEA,self).__init__(False,True,False,'gaea',
                                       'gaea.rdhpcs.noaa.gov')
 
-class NOAAZeus(Cluster):
-    """!Represents the NOAA Zeus cluster.  Allows ACLs to be used for
-    restricted data, and specifies that group quotas are in use."""
+class NOAAHera(Cluster):
+    """!Represents the NOAA Hera cluster.  Does not allow ACLs,
+    assumes no group quotas (fileset quotas instead)."""
     def __init__(self):
-        """!Constructor for NOAAZeus"""
-        super(NOAAZeus,self).__init__(True,True,False,'zeus',
-                                      'zeus.rdhpcs.noaa.gov')
+        super(NOAAHera,self).__init__(False,False,False,'hera',
+                                      'hera.rdhpcs.noaa.gov')
 
 class UCARYellowstone(Cluster):
     """!Represents the Yellowstone cluster.  Does not allow ACLs,
