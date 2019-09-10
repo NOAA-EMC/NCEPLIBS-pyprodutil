@@ -229,6 +229,21 @@ def register_implementations(logger=None):
     # functionality.
 
     try:
+        # If we have srun, and we're in a pack group...
+        import produtil.mpi_impl.srun_pack_groups
+        add_implementation(produtil.mpi_impl.srun_pack_groups.Implementation)
+    except ImportError as e: 
+        logger.info('srun: cannot import: %s'%(str(e),))
+
+    try:
+        # This must be after the pack group case.
+        # If we have srun and SLURM resources...
+        import produtil.mpi_impl.srun
+        add_implementation(produtil.mpi_impl.srun.Implementation)
+    except ImportError as e: 
+        logger.info('srun: cannot import: %s'%(str(e),))
+
+    try:
         import produtil.mpi_impl.inside_aprun
         add_implementation(produtil.mpi_impl.inside_aprun.Implementation)
     except ImportError as e: 
@@ -259,16 +274,16 @@ def register_implementations(logger=None):
         logger.info('mpiexec_mpt: cannot import: %s'%(str(e),))
 
     try:
-        import produtil.mpi_impl.srun
-        add_implementation(produtil.mpi_impl.srun.Implementation)
-    except ImportError as e: 
-        logger.info('srun: cannot import: %s'%(str(e),))
-
-    try:
         import produtil.mpi_impl.mpiexec
         add_implementation(produtil.mpi_impl.mpiexec.Implementation)
     except ImportError as e: 
         logger.info('mpiexec: cannot import: %s'%(str(e),))
+
+    try:
+        import produtil.mpi_impl.srun_shell
+        add_implementation(produtil.mpi_impl.srun_shell.Implementation)
+    except ImportError as e: 
+        logger.info('srun_shell: cannot import: %s'%(str(e),))
 
 def get_mpi(mpi_name=NO_NAME,force=False,logger=None,**kwargs):
     """!Selects a specified MPI implementation, or automatically
