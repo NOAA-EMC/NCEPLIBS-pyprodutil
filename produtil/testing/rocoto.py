@@ -2,7 +2,7 @@
 a Rocoto workflow inside a valid Environmental Equivalence version 2
 (EE2) compliant vertical structure."""
 
-import sys, re, StringIO, collections, os, datetime, logging
+import sys, re, io, collections, os, datetime, logging
 import produtil.run, produtil.log, produtil.setup
 
 from produtil.testing.utilities import *
@@ -360,7 +360,7 @@ fi
                  }
 
         if not self.__install:
-            self.__install=StringIO.StringIO()
+            self.__install=io.StringIO()
             self.__install.write(r'''#! /usr/bin/env bash
 
 # DO NOT EDIT THIS SCRIPT; IT IS AUTOMATICALLY GENERATED
@@ -372,7 +372,7 @@ set -xue
             kwargs['install_if']='if'
 
         if not self.__uninstall:
-            self.__uninstall=StringIO.StringIO()
+            self.__uninstall=io.StringIO()
             self.__uninstall.write(r'''#! /usr/bin/env bash
 
 # DO NOT EDIT THIS SCRIPT; IT IS AUTOMATICALLY GENERATED
@@ -442,7 +442,7 @@ rm -f {target}
             yield buildname
     def iter_paths(self):
         """!Iterates over paths to files that must be generated."""
-        for path in self.__files.iterkeys():
+        for path in self.__files.keys():
             yield path
     def iter_testnames(self):
         """!Iterates over names of tests."""
@@ -451,7 +451,7 @@ rm -f {target}
     def iter_files(self):
         """!Iterates over files to be generated, yielding tuples
         containing the path and contents."""
-        for path,contents in self.__files.iteritems():
+        for path,contents in self.__files.items():
             yield path,contents
     def iter_tests(self):
         """!Iterates over all RocotoTasks for tests to run, yielding a
@@ -707,29 +707,29 @@ class RocotoRunner(object):
         if not dry_run:
             with open(target,'wt') as f:
                 f.write(work.generate_install_script())
-                os.fchmod(f.fileno(),0755)
+                os.fchmod(f.fileno(),0o755)
         target=here('src/uninstall.sh')
         if not dry_run:
             with open(target,'wt') as f:
                 f.write(work.generate_uninstall_script())
-                os.fchmod(f.fileno(),0755)
+                os.fchmod(f.fileno(),0o755)
         if mode is BASELINE:
             target=here('ush/prep_baseline.sh')
             if not dry_run:
                 with open(target,'wt') as f:
                     f.write(work.make_prep_baseline_sh(con))
-                    os.fchmod(f.fileno(),0755)
+                    os.fchmod(f.fileno(),0o755)
         for name,test in work.iter_tests():
             target=here(test.j_job_name(work,con))
             if not dry_run:
                 with open(target,'wt') as f:
                     f.write(test.j_job_contents(work,con))
-                    os.fchmod(f.fileno(),0755)
+                    os.fchmod(f.fileno(),0o755)
             target=here(test.ex_script_name(work,con))
             if not dry_run:
                 with open(target,'wt') as f:
                     f.write(test.ex_script_contents(work,con))
-                    os.fchmod(f.fileno(),0755)
+                    os.fchmod(f.fileno(),0o755)
         target=here('ush/functions.bash')
         if not dry_run:
             with open(target,'wt') as f:

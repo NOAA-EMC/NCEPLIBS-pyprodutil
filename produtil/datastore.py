@@ -247,23 +247,23 @@ class Datastore(object):
         with self.transaction() as t:
             products=t.query('SELECT id,available,location,type FROM products')
             meta=t.query('SELECT id,key,value FROM metadata')
-        print 'TABLE products:'
+        print('TABLE products:')
         taskmap={UNSTARTED:'UNSTARTED',FAILED:'FAILED',RUNNING:'RUNNING',
                  PARTIAL:'PARTIAL',COMPLETED:'COMPLETED'}
         for row in products:
             (what,avail,loc,typ)=row
             if typ=='Task' and avail in taskmap:
-                print "id=%s available=%s (%s) location=%s type=%s" % \
-                    ( what,avail,taskmap[avail],loc,typ )
+                print("id=%s available=%s (%s) location=%s type=%s" % \
+                    ( what,avail,taskmap[avail],loc,typ ))
             elif typ=='Product':
-                print "id=%s available=%s (%s) location=%s type=%s" % \
-                    ( what,avail,repr(bool(avail)),loc,typ )
+                print("id=%s available=%s (%s) location=%s type=%s" % \
+                    ( what,avail,repr(bool(avail)),loc,typ ))
             else:
-                print "id=%s available=%s location=%s type=%s" % \
-                    (what,avail,loc,typ)
-        print 'TABLE metadata:'
+                print("id=%s available=%s location=%s type=%s" % \
+                    (what,avail,loc,typ))
+        print('TABLE metadata:')
         for row in meta:
-            print '%s[%s]=%s' % row
+            print('%s[%s]=%s' % row)
 
 ########################################################################
 
@@ -349,7 +349,7 @@ class Transaction(object):
                     break
 
         if meta and d._meta is not None and d._meta: 
-            for k,v in d._meta.iteritems():
+            for k,v in d._meta.items():
                 if k!='location' and k!='available':
                     self.mutate('INSERT OR IGNORE INTO metadata VALUES (?,?,?)',(d.did,k,v))
         if meta:
@@ -573,13 +573,38 @@ class Datum(object):
         """!Python code-like description of this Datum."""
         return '%s(%s,%s,%s)' % \
             (self.prodtype,repr(self.dstore),repr(self._prodname),repr(self._category))
-    def __cmp__(self,other):
+    def __lt__(self,other):
         """!Compares two Datums' prodnames and categories.
         @param other the other datum to compare against"""
-        if not isinstance(other,Datum): return NotImplemented
-        c=cmp(self._prodname,other._prodname)
-        c=cmp(self._category,other._category) if (c==0) else c
-        return c
+        if self._prodname < other._prodname:
+            return True
+        if self._category < other._category:
+            return True
+        return False
+    def __gt__(self,other):
+        """!Compares two Datums' prodnames and categories.
+        @param other the other datum to compare against"""
+        if self._prodname > other._prodname:
+            return True
+        if self._category > other._category:
+            return True
+        return False
+    def __eq__(self,other):
+        """!Compares two Datums' prodnames and categories.
+        @param other the other datum to compare against"""
+        return not (self>other or self<other)
+    def __ne__(self,other):
+        """!Compares two Datums' prodnames and categories.
+        @param other the other datum to compare against"""
+        return self>other or self<other
+    def __ge__(self,other):
+        """!Compares two Datums' prodnames and categories.
+        @param other the other datum to compare against"""
+        return not (self<other)
+    def __le__(self,other):
+        """!Compares two Datums' prodnames and categories.
+        @param other the other datum to compare against"""
+        return not (self>other)
     def set_loc_avail(self,loc,avail):
         """!Sets the location and availability of this Datum in a
         single transaction.
@@ -675,6 +700,10 @@ class Datum(object):
         with self:
             return k in self._getcache()
     def iteritems(self):
+        """!Alias for items() for backward compatibility"""
+        for k,v in self.items():
+            yield k,v
+    def items(self):
         """!Iterates over all metadata (key,value) pairs for this
         Datum, including "available" and "location"."""
         with self:
@@ -683,7 +712,7 @@ class Datum(object):
         assert('location' in meta)
         yield 'available',meta['available']
         yield 'location',meta['location']
-        for k,v in meta.iteritems():
+        for k,v in meta.items():
             if k!='location' and k!='available':
                 yield k,v
 
@@ -889,9 +918,9 @@ class FileProduct(Product):
           produtil.fileop.deliver_file()
         @post The file is at the location specified, and the database
           location and availability are updated accordingly."""
-        if not isinstance(frominfo,basestring):
+        if not isinstance(frominfo,str):
             raise TypeError('FileProduct.deliver requires a string filename as its frominfo argument.  You provided an object of type %s.'%(type(frominfo).__name__))
-        if location is not None and not isinstance(location,basestring):
+        if location is not None and not isinstance(location,str):
             raise TypeError('FileProduct.deliver requires a location argument that is None or a string filename.  You provided an object of type %s.'%(type(frominfo).__name__))
         loc=location
         setloc=True
@@ -944,7 +973,7 @@ class UpstreamFile(Product):
         if loc is None:
             setloc=False
             loc=self.location
-        elif not isinstance(loc,basestring):
+        elif not isinstance(loc,str):
             raise TypeError('UpstreamFile.check requires a frominfo argument that is either None or a string filename.  You provided an object of type %s.'%(type(frominfo).__name__))
         assert(loc is not None)
         if minsize is None:

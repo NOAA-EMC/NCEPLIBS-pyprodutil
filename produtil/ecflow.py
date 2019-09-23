@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from __future__ import absolute_import
+
 import os, produtil.log
 
 ##@var __all__
@@ -10,7 +10,7 @@ __all__=['set_ecflow_event', 'set_ecflow_label', 'set_ecflow_meter',
 
 ecflow_task_name=os.environ.get('ECF_NAME','')
 if ecflow_task_name:
-    import ecflow
+    from . import ecflow
     ecflow_client=ecflow.Client()
     ecflow_client.set_child_path(ecflow_task_name)
     ecflow_client.set_child_pid(int(os.environ['ECF_RID']))

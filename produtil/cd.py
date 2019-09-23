@@ -189,7 +189,7 @@ class TempDir(object):
         else:
             logging.getLogger('produtil.tempdir').warning(
                 self.dirname+': leaving temp directory due to exception')
-        print produtil.listing.Listing('.')
+        print((produtil.listing.Listing('.')))
     def __enter__(self):
         """!This is a simple wrapper around mkdir_cd that is intended
         to be used with in a "with" block.  This subroutine is
@@ -249,7 +249,7 @@ class NamedDir(TempDir):
              Exception or GeneratorException (or subclass thereof).
         @param rm_first If the directory already exists, delete it first
            and make a new one before cding to it."""
-        if not isinstance(dirname,basestring):
+        if not isinstance(dirname,str):
             raise TypeError(
                 'NamedDir requires a string name as its first argument.')
         super(NamedDir,self).__init__(

@@ -44,8 +44,8 @@ def acl_text_for_rstclass(groupname,mode):
         raise TypeError(
             'In acl_text_for_rstclass, the mode must be the integer access mode, not a %s %s'
             %(type(groupname).__name__,repr(groupname)))
-    imode=int(mode)&0770
-    if not isinstance(groupname,basestring):
+    imode=int(mode)&0o770
+    if not isinstance(groupname,str):
         raise TypeError(
             'In acl_text_for_rstclass, the groupname must be the string name of a unix group, not a %s %s'
             %(type(groupname).__name__,repr(groupname)))
@@ -93,7 +93,7 @@ class RestrictionClass(object):
                     "list (ACL) mechanism, so I cannot use ACLs.")
             use_acl=produtil.cluster.use_acl_for_rstdata()
         self.__use_acl=bool(use_acl)
-        if isinstance(group,basestring):
+        if isinstance(group,str):
             self.__groupname=group
             try:
                 grent=grp.getgrnam(group)
@@ -114,7 +114,7 @@ class RestrictionClass(object):
             except (EnvironmentError,KeyError) as e:
                 raise RstBadGroup('%s: could not get group id for group: %s'
                                   %(group,str(e)))
-            if not isinstance(self.__groupname,basestring):
+            if not isinstance(self.__groupname,str):
                 raise RstBadGroup(
                     '%d: could not get group name for group.  The grp.getgrgid'
                     '(...)[0] returned something that was not an int: a %s %s'
@@ -141,7 +141,7 @@ class RestrictionClass(object):
         user and group permissions, but other groups will have no
         permissions, and the "world" permissions will be 0."""
         acls=dict()
-        mode=010
+        mode=0o10
         for IRUSR in ( 0, stat.S_IRUSR ):
             for IWUSR in ( 0, stat.S_IWUSR ):
                 for IXUSR in ( 0, stat.S_IXUSR ):
@@ -298,7 +298,7 @@ def tag_rstprod(target,logger=None):
     that cluster."""
     if rstprod_tagger is None:
         make_rstprod_tagger(logger=logger)
-    if isinstance(target,basestring):
+    if isinstance(target,str):
         rstprod_tagger.restrict_file(target,logger=logger)
     elif isinstance(target,file) or isinstance(target,int):
         rstprod_tagger.restrict_fd(target,logger=logger)

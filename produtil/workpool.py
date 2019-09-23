@@ -286,7 +286,7 @@ class WorkPool(object):
                 "In WorkPool.kill_threads, thread %s is not the master "
                 "thread."%(str(me),))
         self.die=False
-        for i in xrange(n):
+        for i in range(n):
             with self._modlock:
                 tid=self._last_id+1
                 thread=None
@@ -357,7 +357,7 @@ class WorkPool(object):
             with self._modlock:
                 # First, tell all worker threads to call this function:
                 self._debug('Request barrier on all threads.')
-                for i in xrange(len(self._threads)):
+                for i in range(len(self._threads)):
                     self.add_work(self.barrier)
                 self._debug('Wait for all workers to reach barrier.')
                 # Now wait for it to happen:

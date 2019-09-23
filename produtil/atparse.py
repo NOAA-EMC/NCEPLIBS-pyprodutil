@@ -1,7 +1,7 @@
 """!ATParser is a text parser that replaces strings with variables and
 function output."""
 
-import sys, os, re, StringIO, logging
+import sys, os, re, io, logging
 
 ##@var functions
 # List of functions recognized
@@ -205,7 +205,7 @@ class ATParser:
         else:
             self.warn(
                 'Ignoring unknown function \"%s\" -- I only know these: %s'
-                 %(fun1, ' '.join(functions.keys())))
+                 %(fun1, ' '.join(list(functions.keys()))))
         m=re.match('\.([A-Za-z0-9_]+)(.*)',morefun)
         if m:
             (fun2,morefun2)=m.groups()
@@ -389,7 +389,7 @@ class ATParser:
 
     def str_state(self):
         """!Return a string description of the parser stack for debugging."""
-        out=StringIO.StringIO()
+        out=io.StringIO()
         out.write('STATE STACK: \n')
         for state in self._states:
             out.write('state: ')
@@ -590,7 +590,7 @@ class ATParser:
         (outline,n)=re.subn(r'\@\[((?:\n|[^\]])*)\]',
                     lambda x: self.require_data(x.group(0)[2:-1]),
                     line)
-        if not isinstance(outline,basestring):
+        if not isinstance(outline,str):
             raise TypeError('The re.subn returned a %s %s instead of a basestring.'%(type(outline).__name__,repr(outline)))
         self._write(outline)
         if lineno>self.max_lines:

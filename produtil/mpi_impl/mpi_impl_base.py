@@ -10,7 +10,7 @@
 # For example, LSF+IBMPE and LoadLeveler+IBMPE work this way if one
 # wants to run different programs on different ranks.
 
-import tempfile,stat,os, logging, StringIO, re
+import tempfile,stat,os, logging, io, re
 
 import produtil.prog
 import produtil.pipeline
@@ -212,7 +212,7 @@ class CMDFGen(object):
         assert(base is not None)
         assert(isinstance(lines,list))
         assert(len(lines)>0)
-        assert(isinstance(lines[0],basestring))
+        assert(isinstance(lines[0],str))
         assert(len(lines[0])>0)
         self.filename=kwargs.get(str(base),None)
         self.tmpprefix=kwargs.get('%s_suffix'%(base,),'%s.'%(base,))
@@ -282,7 +282,7 @@ class CMDFGen(object):
             kw={self.cmd_envar: self.filename}
             self._add_more_vars(kw,logger)
             if logger is not None:
-                for k,v in kw.iteritems():
+                for k,v in kw.items():
                     self.info('Set %s=%s'%(k,repr(v)),logger)
             if self.filename_arg:
                 if filename_option:
@@ -300,11 +300,11 @@ class CMDFGen(object):
                 kw={self.cmd_envar: t.name}
                 self._add_more_vars(kw,logger)
                 if logger is not None:
-                    for k,v in kw.iteritems():
+                    for k,v in kw.items():
                         self.info('Set %s=%s'%(k,repr(v)),logger)
                 runner.env(**kw)
                 if self.filename_arg:
-                    if isinstance(self.filename_option,basestring):
+                    if isinstance(self.filename_option,str):
                         runner=runner[str(self.filename_option)]
                     runner=runner[os.path.realpath(t.name)]
             result=runner
@@ -319,7 +319,7 @@ class CMDFGen(object):
         @param logger a logging.Logger for log messages
         @returns a tuple containing shell code and the modified runner"""
         if logger is None: logger=module_logger
-        sio=StringIO.StringIO()
+        sio=io.StringIO()
         filename=self.filename
         if filename is None:
             filename='tempfile'
@@ -352,7 +352,7 @@ class CMDFGen(object):
         kw={self.cmd_envar: filename}
         self._add_more_vars(kw,logger)
         if logger is not None:
-            for k,v in kw.iteritems():
+            for k,v in kw.items():
                 self.info('Set %s=%s'%(k,repr(v)),logger)
         if self.filename_arg:
             runner=runner[filename]

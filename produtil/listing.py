@@ -4,7 +4,7 @@
 # Symbols exported by "from produtil.listing import *"
 __all__=['Listing']
 
-import os,stat,StringIO,grp,pwd,time
+import os,stat,io,grp,pwd,time
 
 class Listing(object):
     """!Imitates the shell "ls -l" program.
@@ -34,17 +34,17 @@ class Listing(object):
         self.list(hidden=bool(hidden),logger=logger)
     def __iter__(self):
         """!Iterates over filenames in the listed directory."""
-        for name in self.contents.iterkeys():
+        for name in self.contents.keys():
             yield name
     def iteritems(self):
         """!Iterates over name,data pairs in the listed directory.  The
         "data" will be a tuple containing the output of lstat and the
         output of readlink."""
-        for (name,data) in self.contents.iteritems():
+        for (name,data) in self.contents.items():
             yield name,data
     def iterkeys(self):
         """!Iterates over filenames in the listed directory."""
-        for name in self.contents.iterkeys():
+        for name in self.contents.keys():
             yield name
 
     def list(self,hidden=False,logger=None):
@@ -86,16 +86,16 @@ class Listing(object):
         c=self.__contents
         sizes=[0,0,0,0,0,0]
         rows=list()
-        for (name,item) in c.iteritems():
+        for (name,item) in c.items():
             row=self._stritem(name,item)
-            for col in xrange(len(row)-1):
+            for col in range(len(row)-1):
                 sizes[col]=max(sizes[col],len(row[col]))
             rows.append(row)
         format=' %%%ds'*6+' %%s\n'
         format=format[1:]
         format=format%tuple(sizes)
 
-        s=StringIO.StringIO()
+        s=io.StringIO()
         for row in rows:
             s.write(format%row)
         st=s.getvalue()

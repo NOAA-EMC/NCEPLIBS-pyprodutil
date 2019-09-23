@@ -189,7 +189,7 @@ class Implementation(ImplementationBase):
             pack_group_sizes=self.get_pack_group_sizes(arg,scheduler_distribution)
             pack_size=len(pack_group_sizes)
             srun_args=[self.srun_path]
-            for i in xrange(pack_size):
+            for i in range(pack_size):
                 if i>0: srun_args += [':']
                 srun_args+=[a for a in arg.args()]
             result=produtil.prog.Runner(srun_args)
@@ -205,7 +205,7 @@ class Implementation(ImplementationBase):
             desired_ranks=arg.nranks()
             pack_group_sizes=self.get_pack_group_sizes(arg,scheduler_distribution)
             srun_args=[self.srun_path]
-            for igroup in xrange(len(pack_group_sizes)):
+            for igroup in range(len(pack_group_sizes)):
                 group_size=pack_group_sizes[igroup]
                 use_ranks=max(0,min(group_size,desired_ranks-included_ranks))
                 included_ranks+=use_ranks

@@ -12,7 +12,7 @@
 #  number of MPI ranks used when running an MPI program.  You can only run
 #  on all provided ranks, or one rank.  Hence the TOTAL_TASKS variable used
 #  elsewhere in produtil, is ignored here.
-import os, socket, logging, StringIO
+import os, socket, logging, io
 import produtil.fileop,produtil.prog,produtil.mpiprog,produtil.pipeline
 
 from .mpi_impl_base import MPIMixed,CMDFGen,ImplementationBase, \

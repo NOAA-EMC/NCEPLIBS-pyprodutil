@@ -19,7 +19,7 @@ Printing resource limits to a logger:
 @endcode
 """
 
-import resource, logging, StringIO, time
+import resource, logging, io, time
 
 ##@var rtypemap
 # Maps the name used in this module for each resource class to the
@@ -80,7 +80,7 @@ def setrlimit(logger=None, ignore=False, hard=False, **kwargs):
     *  aspace = max. address space (RLIMIT_AS)
     See "man setrlimit" for details."""
     if logger is None: logger=logging.getLogger('produtil.setrlimit')
-    for k,v in kwargs.iteritems():
+    for k,v in kwargs.items():
         try:
             (softL,hardL)=resource.getrlimit(rtypemap[k])
             if hard: 
@@ -104,7 +104,7 @@ class RLimit(object):
         @param logger a logging.Logger for log messages."""
         if logger is None:
             logger=logging.getLogger('produtil.getrlimit')
-        for (name,limit) in rtypemap.iteritems():
+        for (name,limit) in rtypemap.items():
             try:
                 r=resource.getrlimit(limit)
                 if r is None:
@@ -117,8 +117,8 @@ class RLimit(object):
     def __str__(self):
         """!Creates a multi-line string representation of the resource
         limits."""
-        out=StringIO.StringIO()
-        for k,v in self.__dict__.iteritems():
+        out=io.StringIO()
+        for k,v in self.__dict__.items():
             kk=k[8:]
             if k[0:8]=='_limits_':
                 (soft,hard)=v
@@ -262,7 +262,7 @@ class RUsage(object):
         """!Generates a string report of the resource usage utilized.
         Accessible via str(self)."""
         if self._report is None:
-            s=StringIO.StringIO()
+            s=io.StringIO()
             b=self.rusage_before
             a=self.rusage_after
             if a is None or b is None:
