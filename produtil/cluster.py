@@ -90,17 +90,10 @@ def where():
         elif os.path.exists('/data') and os.path.exists('/scratch') and \
                 os.path.exists('/home'):
             here=WisconsinS4()
-        elif os.path.exists('/scratch3'):
-            theia=False
-            with open('/proc/cpuinfo','rt') as f:
-                for line in f.readlines(1000):
-                    if line.find('E5-2690')>=0:
-                        theia=True
-                        break
-            if theia:
+        elif os.path.exists('/scratch1'):
+            here=NOAAHera()
+            if os.path.exists('/scratch'):
                 here=NOAATheia()
-            else:
-                here=NOAAHera()
         elif os.path.exists('/ptmpd2'):
             here=NOAAWCOSS()
         elif os.path.exists('/usrx') and 'dell' in os.readlink('/usrx'):
