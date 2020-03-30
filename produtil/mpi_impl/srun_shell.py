@@ -96,7 +96,7 @@ class Implementation(ImplementationBase):
             logging.getLogger('srun').info("%s => %s"%(repr(arg),repr(f)))
         return f
     
-    def mpirunner_impl(self,arg,allranks=False,nodesize=None,**kwargs):
+    def mpirunner_impl(self,arg,allranks=False,nodesize=None,label_io=False,**kwargs):
         """!This is the underlying implementation of mpirunner and should
         not be called directly."""
         if not nodesize:
@@ -118,6 +118,9 @@ class Implementation(ImplementationBase):
 
 
         srun_args=['srun','--export=ALL','--cpu_bind=core']
+
+        if label_io:
+            srun_args.append('--label')
 
         arbitrary_pl=list()
         layout_pl=list()
