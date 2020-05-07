@@ -4,7 +4,7 @@
 #List of symbols exported by "from produtil.cluster import *"
 __all__=['Cluster','where','longname','name','group_quotas','acl_support',
          'no_access_control','use_acl_for_rstdata','ncepprod',
-         'NOAAJet','NOAAGAEA','NOAAHera','NOAAWCOSS']
+         'MSUOrion','NOAAJet','NOAAGAEA','NOAAHera','NOAAWCOSS']
 
 import time, socket, os, re
 
@@ -203,12 +203,12 @@ class WisconsinS4(Cluster):
         super(WisconsinS4,self).__init__(
             True,False,False,'s4','s4.ssec.wisc.edu')
 
-class NOAATheia(Cluster):
-    """Represents the NOAA Theia cluster.  Does not allow ACLs,
+class MSUOrion(Cluster):
+    """Represents the MSU Orion cluster.  Does not allow ACLs,
     assumes no group quotas (fileset quotas instead)."""
     def __init__(self):
-        super(NOAATheia,self).__init__(
-            False,False,False,'theia','theia.rdhpcs.noaa.gov')
+        super(MSUOrion,self).__init__(
+            False,False,False,'orion','orion.hpc.msstate.edu')
 
 class NOAAWCOSS(Cluster):
     """!Represents the NOAA WCOSS clusters, Tide, Gyre and the test
