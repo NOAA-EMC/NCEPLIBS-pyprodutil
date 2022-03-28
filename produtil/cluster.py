@@ -100,6 +100,8 @@ def where():
             here=NOAAWCOSS(phase=3)
         elif os.path.exists('/gpfs/hps/nco'):
             here=WCOSSCray()
+        elif os.path.exists('/lfs/h2/emc'):
+            here=WCOSS2()
         elif os.path.exists('/lustre/f2'):
             here=NOAAGAEA()
         else:
@@ -349,3 +351,35 @@ class WCOSSCray(NOAAWCOSS):
 
         @returns 0"""
         return 0
+
+class WCOSS2(NOAAWCOSS):
+    """!This subclass of NOAAWCOSS handles the new Cray portions of
+    WCOSS: Luna and Surge."""
+    def __init__(self,name=None):
+        """!Create a new WCOSS2 object describing this cluster as a
+        Cray machine.
+
+        @property name The name of the cluster.  Default is to check
+        the hostname with socket.gethosname() and decide "dogwood"
+        vs. "cactus" based on the first letter of the hostname. """
+        if name is None:
+            host1=socket.gethostname()[0:1]
+            if host1=='c':          name='cactus'
+            elif host1=='s':        name='dogwood'
+            else:                   name='cactus'
+        super(WCOSS2,self).__init__(name=name)
+
+    ##@var partition
+    # Returns "cray" to indicate the user is on the Cray side of WCOSS
+
+    @property
+    def partition(self):
+        return 'cray'
+
+    @property
+    def wcoss_phase(self):
+        """!Returns 0 to indicate that this is not the IBM part of WCOSS.
+
+        @returns 0"""
+        return 0
+

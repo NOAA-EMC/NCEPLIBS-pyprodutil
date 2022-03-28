@@ -250,6 +250,12 @@ def register_implementations(logger=None):
         logger.info('inside_aprun: cannot import: %s'%(str(e),))
 
     try:
+        import produtil.mpi_impl.pbs_cray_intel
+        add_implementation(produtil.mpi_impl.pbs_cray_intel.Implementation)
+    except ImportError as e:
+        logger.info('pbs_cray_intel: cannot import: %s'%(str(e),))
+
+    try:
         import produtil.mpi_impl.lsf_cray_intel
         add_implementation(produtil.mpi_impl.lsf_cray_intel.Implementation)
     except ImportError as e: 
