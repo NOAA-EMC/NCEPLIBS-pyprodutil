@@ -1,4 +1,6 @@
-"""!Provides information about the cluster on which this job is running"""
+"""!Provides information about the cluster on which this job is running.""" 
+"""Remove and clean WCOSS Cray and WCOSS Dell_p3 related logic and updating
+prodcution machine identifying logic for WCOSS2 (Biju Thomas 10/12/2022)"""
 
 ##@var __all__
 #List of symbols exported by "from produtil.cluster import *"
@@ -94,12 +96,6 @@ def where():
             here=NOAAHera()
             if os.path.exists('/scratch'):
                 here=NOAATheia()
-        elif os.path.exists('/ptmpd2'):
-            here=NOAAWCOSS()
-        elif os.path.exists('/usrx') and 'dell' in os.readlink('/usrx'):
-            here=NOAAWCOSS(phase=3)
-        elif os.path.exists('/gpfs/hps/nco'):
-            here=WCOSSCray()
         elif os.path.exists('/lfs/h2/emc'):
             here=WCOSS2()
         elif os.path.exists('/lustre/f2'):
@@ -231,13 +227,6 @@ class NOAAWCOSS(Cluster):
         time for which the result of self.production should be cached.
         Default: 30 seconds.
         @param prod_cache_time how long to cache the prod vs. dev information, in seconds"""
-        if name is None:
-            host1=socket.gethostname()[0:1]
-            if host1=='t':          name='tide'
-            elif host1=='g':        name='gyre'
-            elif host1=='v':        name='venus'
-            elif host1=='m':        name='mars'
-            else:                   name='eddy'  # should update for Dell test machine
 
         super(NOAAWCOSS,self).__init__(False,False,DO_NOT_SET,name,
                                        name+'.ncep.noaa.gov')
@@ -252,50 +241,14 @@ class NOAAWCOSS(Cluster):
         self._lastprod=0
         self._phase=0;
 
-    ##@var partition
-    # Returns "phase1" on phase 1, or "phase2" on phase 2.
-    # The WCOSSCray.partition overrides this on the Cray.
-
-    @property
-    def partition(self):
-        wp=self.wcoss_phase
-        if wp==1: return 'phase1'
-        if wp==2: return 'phase2'
-        return 'unknown' # should never reach this line
-
-    @property
-    def wcoss_phase(self):
-        """!Returns integer 1 or 2 for WCOSS Phase 1 or WCOSS Phase 2,
-        respectively.  Returns 0 if the request is invalid, such as on
-        WCOSS Cray.
-
-        Scans /proc/cpuinfo for processor 32.  If processor 32 is
-        found, you are on Phase 2, which has 48 virtual processors per
-        node.  Otherwise, you are on Phase 1.  
-
-        @note Cached results are returned if available.  Use uncache()
-        to force regeneration of the information.
-
-        @returns 1 for WCOSS Phase 1, 2 for WCOSS Phase 2, or 0 for
-        WCOSS Cray"""
-        if self._phase is None:
-            phase=1
-            with open('/proc/cpuinfo','rt') as cpuinfo:
-                for line in cpuinfo:
-                    if re.match('(?i)^processor\s*:\s*32',line):
-                        phase=2
-                        break
-            self._phase=phase
-        return self._phase
-
     @property
     def production(self):
-        """!Is this the WCOSS production machine?  
+        """!Is this the WCOSS2 production machine?  
 
-        The name of the WCOSS production machine: tide, gyre, surge or
-        luna as determined by the /etc/prod file.
+        The name of the WCOSS2 production machine: cactus or dogwood
+        luna as determined by the /lfs/h1/ops/prod/config/prodmachinefile file.
 
-        @returns True or False: is this the WCOSS production machine?
+        @returns True or False: is this the WCOSS2 production machine?
 
         @note The return value may change during the execution of this
         program if a production switch happened.  A cached value is
@@ -309,48 +262,18 @@ class NOAAWCOSS(Cluster):
         if self._production is None or \
                 now-self._lastprod>self._prod_cache_time:
             prod=False
-            if os.path.exists('/etc/prod'):
-                with open('/etc/prod','rt') as f:
+            if os.path.exists('/lfs/h1/ops/prod/config/prodmachinefile'):
+                with open('/lfs/h1/ops/prod/config/prodmachinefile','rt') as f:
                     for line in f:
                         if re.match('[a-z]+',line):
-                            prod = line.strip()==self.name
-                            break
+                            if line.strip().split(':')[0]=='primary':
+                                prod = line.strip().split(':')[1].strip()==self.name
+                                break
             self._production=prod
             self._lastprod=int(time.time())
             return prod
         else:
             return self._production
-
-class WCOSSCray(NOAAWCOSS):
-    """!This subclass of NOAAWCOSS handles the new Cray portions of
-    WCOSS: Luna and Surge."""
-    def __init__(self,name=None):
-        """!Create a new WCOSSCray object describing this cluster as a
-        Cray machine.
-
-        @property name The name of the cluster.  Default is to check
-        the hostname with socket.gethosname() and decide "luna"
-        vs. "surge" based on the first letter of the hostname. """
-        if name is None:
-            host1=socket.gethostname()[0:1]
-            if host1=='l':          name='luna'
-            elif host1=='s':        name='surge'
-            else:                   name='luna'
-        super(WCOSSCray,self).__init__(name=name)
-
-    ##@var partition
-    # Returns "cray" to indicate the user is on the Cray side of WCOSS
-
-    @property
-    def partition(self):
-        return 'cray'
-
-    @property
-    def wcoss_phase(self):
-        """!Returns 0 to indicate that this is not the IBM part of WCOSS.
-
-        @returns 0"""
-        return 0
 
 class WCOSS2(NOAAWCOSS):
     """!This subclass of NOAAWCOSS handles the new Cray portions of
@@ -368,18 +291,3 @@ class WCOSS2(NOAAWCOSS):
             elif host1=='s':        name='dogwood'
             else:                   name='cactus'
         super(WCOSS2,self).__init__(name=name)
-
-    ##@var partition
-    # Returns "cray" to indicate the user is on the Cray side of WCOSS
-
-    @property
-    def partition(self):
-        return 'cray'
-
-    @property
-    def wcoss_phase(self):
-        """!Returns 0 to indicate that this is not the IBM part of WCOSS.
-
-        @returns 0"""
-        return 0
-
